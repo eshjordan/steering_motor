@@ -4,7 +4,8 @@ project(CANopen LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-std=c++2a)
+add_compile_options(-std=c++2a -g)
+set(CMAKE_BUILD_TYPE "Debug")
 
 add_executable(CANopen
     "./steering_motor.cpp"

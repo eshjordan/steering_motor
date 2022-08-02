@@ -1,6 +1,24 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)                                                                                           \
+    (byte & 0x80 ? '1' : '0'), (byte & 0x40 ? '1' : '0'), (byte & 0x20 ? '1' : '0'), (byte & 0x10 ? '1' : '0'),        \
+        (byte & 0x08 ? '1' : '0'), (byte & 0x04 ? '1' : '0'), (byte & 0x02 ? '1' : '0'), (byte & 0x01 ? '1' : '0')
+
+inline void print_byte_binary(uint8_t data) { printf(BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data)); }
+
+inline void print_frame_data(uint8_t *data)
+{
+    printf("0x");
+    for (int i = 0; i < 8; i++)
+    {
+        printf("%02hx", data[i]);
+    }
+    printf("\n");
+}
 
 typedef struct __attribute__((__packed__)) {
     const uint8_t sof : 1 = 0b0;
@@ -97,31 +115,52 @@ typedef enum : uint8_t {
     CCS_BLOCK_DOWNLOAD    = 0x06U, // SDO block download
 } CCS_en;
 
-#define SDO_EXPIDITED_DISABLE 0b0
-#define SDO_EXPIDITED_ENABLE 0b1
+#define SDO_EXPEDITED_DISABLE 0b0U
+#define SDO_EXPEDITED_ENABLE 0b1U
 
-#define SDO_SIZE_DISABLE 0b0
-#define SDO_SIZE_ENABLE 0b1
+#define SDO_SIZE_DISABLE 0b0U
+#define SDO_SIZE_ENABLE 0b1U
 
 /**
  * @brief SDO message structure.
  *
  */
 typedef struct __attribute__((__packed__)) {
-    uint8_t ccs : 3;                  // Client Command Specifier
-    const uint8_t reserved_0 : 1 = 0; // Reserved
-    uint8_t n : 2; // number of bytes in the data part of the message which do not contain data, only valid if e and s
-                   // are set
+    uint8_t s : 1; // if set, indicates that the data size is specified in n (if e is set) or in the data part of the
+                   // message
     uint8_t e : 1; // if set, indicates an expedited transfer, i.e. all data exchanged are contained within the message.
                    // If this bit is cleared then the message is a segmented transfer where the data does not fit into
                    // one message and multiple messages are used.
-    uint8_t s : 1; // if set, indicates that the data size is specified in n (if e is set) or in the data part of the
-                   // message
-    uint16_t index;   // object dictionary index of the data to be accessed
-    uint8_t subindex; // subindex of the object dictionary variable
-    uint8_t data[4];  // data to be uploaded in the case of an expedited transfer (e is set), or the size of the data to
-                      // be uploaded (s is set, e is not set)
+    uint8_t n : 2; // number of bytes in the data part of the message which do not contain data, only valid if e and s
+                   // are set
+    const uint8_t reserved_0 : 1 = 0; // Reserved
+    CCS_en ccs : 3;                   // Client Command Specifier
+    uint16_t index;                   // object dictionary index of the data to be accessed
+    uint8_t subindex;                 // subindex of the object dictionary variable
+    uint8_t data[4]; // data to be uploaded in the case of an expedited transfer (e is set), or the size of the data to
+                     // be uploaded (s is set, e is not set)
 } SDO_t;
+
+constexpr uint16_t SW_NOT_READY_MASK             = 0b0000000001001111U;
+constexpr uint16_t SW_SWITCH_ON_DISABLED_MASK    = 0b0000000001001111U;
+constexpr uint16_t SW_SWITCH_ON_READY_MASK       = 0b0000000001101111U;
+constexpr uint16_t SW_SWITCHED_ON_MASK           = 0b0000000001101111U;
+constexpr uint16_t SW_OPERATION_ENABLED_MASK     = 0b0000000001101111U;
+constexpr uint16_t SW_QUICK_STOP_ACTIVE_MASK     = 0b0000000001101111U;
+constexpr uint16_t SW_FAULT_MASK                 = 0b0000000001001111U;
+constexpr uint16_t SW_FAULT_REACTION_ACTIVE_MASK = 0b0000000001001111U;
+
+typedef enum : uint16_t {
+    SW_NOT_READY             = 0b0000000000000000U,
+    SW_SWITCH_ON_DISABLED    = 0b0000000001000000U,
+    SW_SWITCH_ON_READY       = 0b0000000000100001U,
+    SW_SWITCHED_ON           = 0b0000000000100011U,
+    SW_OPERATION_ENABLED     = 0b0000000000100111U,
+    SW_QUICK_STOP_ACTIVE     = 0b0000000000000111U,
+    SW_FAULT                 = 0b0000000000001000U,
+    SW_FAULT_REACTION_ACTIVE = 0b0000000000001111U,
+    SW_ERROR                 = 0b1111111111111111U,
+} StatusWord_t;
 
 using can_rx_fn = uint8_t (*)(struct can_frame *frame);
 
