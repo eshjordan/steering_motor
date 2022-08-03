@@ -7,7 +7,7 @@
 
 constexpr uint8_t SM_NODE_ID = 0x4D;
 
-uint8_t rx_fn(struct can_frame * /*frame*/) { return 0; }
+uint8_t rx_fn(struct can_frame * /*frame*/, uint16_t) { return 0; }
 
 uint8_t tx_fn(const struct can_frame * /*frame*/) { return 0; }
 

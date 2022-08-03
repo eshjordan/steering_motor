@@ -7,7 +7,7 @@
 class CANopen
 {
 private:
-    const can_rx_fn m_rx_function;
+    const can_rx_fn m_rx_function; //For passing in the MCP2515::sendMessage and readMessage
     const can_tx_fn m_tx_function;
 
 

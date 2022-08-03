@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define TIME_OUT 10000
+
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)                                                                                           \
     (byte & 0x80 ? '1' : '0'), (byte & 0x40 ? '1' : '0'), (byte & 0x20 ? '1' : '0'), (byte & 0x10 ? '1' : '0'),        \
@@ -162,7 +164,7 @@ typedef enum : uint16_t {
     SW_ERROR                 = 0b1111111111111111U,
 } StatusWord_t;
 
-using can_rx_fn = uint8_t (*)(struct can_frame *frame);
+using can_rx_fn = uint8_t (*)(struct can_frame *frame, uint16_t cob_id);
 
 using can_tx_fn = uint8_t (*)(const struct can_frame *frame);
 
