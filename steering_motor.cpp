@@ -1,9 +1,12 @@
+
+#if(0)
+
 #include "CANopen.hpp"
 #include "endian.hpp"
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 constexpr uint8_t SM_NODE_ID = 0x4D;
 
@@ -17,7 +20,7 @@ void initMotor(uint32_t prof_vel, uint32_t prof_accel, uint32_t prof_decel)
 {
     uint16_t cob_id = CANOPEN_FN_SDO_RX + SM_NODE_ID;
 
-    can_raw_frame_t raw_frame;
+//    can_raw_frame_t raw_frame;
     raw_frame.id = cob_id;
 
     /*Clear the faults in the Control Word (6040h)*/
@@ -45,3 +48,5 @@ int main(int argc, char **argv)
 void setup() { initMotor(10, 11, 11); }
 
 void loop() {}
+
+#endif

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 //! Byte swap unsigned short
 inline uint16_t swap_uint16(uint16_t val) { return (val << 8) | (val >> 8); }

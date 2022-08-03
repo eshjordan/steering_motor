@@ -22,29 +22,29 @@ inline void print_frame_data(uint8_t *data)
     printf("\n");
 }
 
-typedef struct __attribute__((__packed__)) {
-    const uint8_t sof : 1 = 0b0;
-    uint16_t id : 11;
-    uint8_t stuff : 1;
-    uint8_t rtr : 1;
-    const uint8_t ide : 1      = 0b0;
-    const uint8_t reserved : 1 = 0b0;
-    uint8_t dlc : 4;
-    uint8_t data_00 : 8;
-    uint8_t data_01 : 8;
-    uint8_t data_02 : 8;
-    uint8_t data_03 : 8;
-    uint8_t data_04 : 8;
-    uint8_t data_05 : 8;
-    uint8_t data_06 : 8;
-    uint8_t data_07 : 8;
-    uint16_t crc : 15;
-    const uint8_t crc_delimiter : 1 = 0b1;
-    uint8_t ack_slot : 1;
-    const uint8_t acl_delimiter : 1 = 0b1;
-    const uint8_t eof : 7           = 0b1111111;
-    const uint8_t ifs : 3           = 0b111;
-} can_raw_frame_t;
+// typedef struct __attribute__((__packed__)) {
+//     const uint8_t sof : 1 = 0b0;
+//     uint16_t id : 11;
+//     uint8_t stuff : 1;
+//     uint8_t rtr : 1;
+//     const uint8_t ide : 1      = 0b0;
+//     const uint8_t reserved : 1 = 0b0;
+//     uint8_t dlc : 4;
+//     uint8_t data_00 : 8;
+//     uint8_t data_01 : 8;
+//     uint8_t data_02 : 8;
+//     uint8_t data_03 : 8;
+//     uint8_t data_04 : 8;
+//     uint8_t data_05 : 8;
+//     uint8_t data_06 : 8;
+//     uint8_t data_07 : 8;
+//     uint16_t crc : 15;
+//     const uint8_t crc_delimiter : 1 = 0b1;
+//     uint8_t ack_slot : 1;
+//     const uint8_t acl_delimiter : 1 = 0b1;
+//     const uint8_t eof : 7           = 0b1111111;
+//     const uint8_t ifs : 3           = 0b111;
+// } can_raw_frame_t;
 
 /**
  * @brief CANopen function specifier.
@@ -135,7 +135,7 @@ typedef struct __attribute__((__packed__)) {
                    // one message and multiple messages are used.
     uint8_t n : 2; // number of bytes in the data part of the message which do not contain data, only valid if e and s
                    // are set
-    const uint8_t reserved_0 : 1 = 0; // Reserved
+    const uint8_t reserved_0 : 1; // Reserved
     CCS_en ccs : 3;                   // Client Command Specifier
     uint16_t index;                   // object dictionary index of the data to be accessed
     uint8_t subindex;                 // subindex of the object dictionary variable

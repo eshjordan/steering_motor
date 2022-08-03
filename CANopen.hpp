@@ -2,7 +2,7 @@
 
 #include "CANopen_types.hpp"
 #include "autowp-mcp2515/can.h"
-#include <cstdint>
+#include <stdint.h>
 
 class CANopen
 {
