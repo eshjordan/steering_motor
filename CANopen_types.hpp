@@ -136,9 +136,9 @@ typedef struct __attribute__((__packed__)) {
     uint8_t n : 2; // number of bytes in the data part of the message which do not contain data, only valid if e and s
                    // are set
     const uint8_t reserved_0 : 1; // Reserved
-    CCS_en ccs : 3;                   // Client Command Specifier
-    uint16_t index;                   // object dictionary index of the data to be accessed
-    uint8_t subindex;                 // subindex of the object dictionary variable
+    CCS_en ccs : 3;               // Client Command Specifier
+    uint16_t index;               // object dictionary index of the data to be accessed
+    uint8_t subindex;             // subindex of the object dictionary variable
     uint8_t data[4]; // data to be uploaded in the case of an expedited transfer (e is set), or the size of the data to
                      // be uploaded (s is set, e is not set)
 } SDO_t;
@@ -153,16 +153,44 @@ constexpr uint16_t SW_FAULT_MASK                 = 0b0000000001001111U;
 constexpr uint16_t SW_FAULT_REACTION_ACTIVE_MASK = 0b0000000001001111U;
 
 typedef enum : uint16_t {
-    SW_NOT_READY             = 0b0000000000000000U,
-    SW_SWITCH_ON_DISABLED    = 0b0000000001000000U,
-    SW_SWITCH_ON_READY       = 0b0000000000100001U,
-    SW_SWITCHED_ON           = 0b0000000000100011U,
-    SW_OPERATION_ENABLED     = 0b0000000000100111U,
-    SW_QUICK_STOP_ACTIVE     = 0b0000000000000111U,
-    SW_FAULT                 = 0b0000000000001000U,
-    SW_FAULT_REACTION_ACTIVE = 0b0000000000001111U,
-    SW_ERROR                 = 0b1111111111111111U,
-} StatusWord_t;
+    SW_READY_TO_SWITCH_ON    = (1U << 0U),
+    SW_SWITCHED_ON           = (1U << 1U),
+    SW_OPERATION_ENABLED     = (1U << 2U),
+    SW_FAULT                 = (1U << 3U),
+    SW_VOLTAGE_ENABLED       = (1U << 4U),
+    SW_QUICK_STOP            = (1U << 5U),
+    SW_SWITCH_ON_DISABLED    = (1U << 6U),
+    SW_WARNING               = (1U << 7U),
+    SW_GOSUB_R2_BUSY         = (1U << 8U),
+    SW_REMOTE                = (1U << 9U),
+    SW_TARGET_REACHED        = (1U << 10U),
+    SW_INTERNAL_LIMIT_ACTIVE = (1U << 11U),
+    SW_SETPOINT_ACK          = (1U << 12U), // In Homing Mode, this is Position Actual adjusted
+    SW_MOVE_ERROR            = (1U << 13U),
+    SW_USER_CONTROLLED       = (1U << 14U),
+    SW_UNUSED                = (1U << 15U),
+    SW_MAX                   = (0xFFFFU)
+} StatusWord_en;
+
+typedef enum : uint16_t {
+    CW_SWITCH_ON        = (1U << 0U),
+    CW_ENABLE_VOLTAGE   = (1U << 1U),
+    CW_QUICK_STOP       = (1U << 2U),
+    CW_ENABLE_OPERATION = (1U << 3U),
+    CW_NEW_SETPOINT     = (1U << 4U),
+    CW_CHANGE_SET_NOW   = (1U << 5U),
+    CW_RELATIVE         = (1U << 6U),
+    CW_FAULT_RESET      = (1U << 7U),
+    CW_HALT             = (1U << 8U),
+    CW_PP_SPECIFIC      = (1U << 9U),
+    CW_RESERVED         = (1U << 10U),
+    CW_USER_RCAN2       = (1U << 11U),
+    CW_UNUSED_01        = (1U << 12U),
+    CW_UNUSED_02        = (1U << 13U),
+    CW_UNUSED_03        = (1U << 14U),
+    CW_IP_BUF_RESET     = (1U << 15U),
+    CW_MAX              = (0xFFFFU)
+} ControlWord_en;
 
 using can_rx_fn = uint8_t (*)(struct can_frame *frame, uint16_t cob_id);
 
