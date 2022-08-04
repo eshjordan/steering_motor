@@ -35,13 +35,14 @@ DriveStateMachine::DriveState_en DriveStateMachine::calculate_state(const uint16
     return DriveStateMachine::DS_MAX;
 }
 
-bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *control_word)
+bool DriveStateMachine::valid_transition(const DriveState_en &initial_state, const DriveState_en &final_state,
+                                         uint16_t *control_word)
 {
     bool ok_transition = false;
-    switch (m_current_state)
+    switch (initial_state)
     {
     case DriveState_en::DS_NOT_READY:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_DISABLED:
@@ -66,7 +67,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_SWITCH_ON_DISABLED:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_READY: {
@@ -95,7 +96,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_SWITCH_ON_READY:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCHED_ON: {
@@ -132,7 +133,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_SWITCHED_ON:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_DISABLED: {
@@ -169,7 +170,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_OPERATION_ENABLED:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_DISABLED: {
@@ -210,7 +211,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_QUICK_STOP_ACTIVE:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_DISABLED: ok_transition = true; break;
@@ -235,7 +236,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_FAULT:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_SWITCH_ON_DISABLED: {
@@ -260,7 +261,7 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
         }
         break;
     case DriveState_en::DS_FAULT_REACTION_ACTIVE:
-        switch (state)
+        switch (final_state)
         {
         // Valid transitions
         case DriveState_en::DS_FAULT: {
@@ -287,5 +288,12 @@ bool DriveStateMachine::valid_transition(const DriveState_en &state, uint16_t *c
     default: break;
     }
 
+    return ok_transition;
+}
+
+bool DriveStateMachine::set_state(const DriveState_en &state, uint16_t *control_word)
+{
+    bool ok_transition = valid_transition(m_current_state, state, control_word);
+    if (ok_transition) { m_current_state = state; }
     return ok_transition;
 }
