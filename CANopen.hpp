@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CANopen_types.hpp"
+#include "DriveStateMachine.hpp"
 #include "autowp-mcp2515/can.h"
 #include <stdint.h>
 
@@ -17,6 +18,4 @@ public:
 
     SDO_t sdo_read(uint16_t node_id, uint16_t object, uint8_t subindex, uint8_t *req_data, uint8_t req_data_length, uint8_t *rx_data, uint8_t *rx_data_length) const;
     SDO_t sdo_write(uint8_t node_id, uint16_t object, uint8_t subindex, uint8_t *data, uint8_t data_length) const;
-
-    StatusWord_t get_status_word(uint16_t value);
 };

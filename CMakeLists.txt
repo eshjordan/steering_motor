@@ -10,4 +10,5 @@ set(CMAKE_BUILD_TYPE "Debug")
 add_executable(CANopen
     "./steering_motor.cpp"
     "./CANopen.cpp"
+    "./DriveStateMachine.cpp"
 )

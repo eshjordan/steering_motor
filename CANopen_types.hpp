@@ -22,6 +22,11 @@ inline void print_frame_data(uint8_t *data)
     printf("\n");
 }
 
+#define SET_BIT(value, bit) ((value) |= (__typeof__(value))(1u << (uint8_t)(bit)))
+#define CLEAR_BIT(value, bit) ((value) &= (__typeof__(value))(~(__typeof__(value))(1u << (uint8_t)(bit))))
+#define SET_BIT_PATTERN(value, pattern) ((value) |= (__typeof__(value))(pattern))
+#define CLEAR_BIT_PATTERN(value, pattern) ((value) &= (__typeof__(value))(~(__typeof__(value))(pattern)))
+
 // typedef struct __attribute__((__packed__)) {
 //     const uint8_t sof : 1 = 0b0;
 //     uint16_t id : 11;
@@ -153,43 +158,43 @@ constexpr uint16_t SW_FAULT_MASK                 = 0b0000000001001111U;
 constexpr uint16_t SW_FAULT_REACTION_ACTIVE_MASK = 0b0000000001001111U;
 
 typedef enum : uint16_t {
-    SW_READY_TO_SWITCH_ON    = (1U << 0U),
-    SW_SWITCHED_ON           = (1U << 1U),
-    SW_OPERATION_ENABLED     = (1U << 2U),
-    SW_FAULT                 = (1U << 3U),
-    SW_VOLTAGE_ENABLED       = (1U << 4U),
-    SW_QUICK_STOP            = (1U << 5U),
-    SW_SWITCH_ON_DISABLED    = (1U << 6U),
-    SW_WARNING               = (1U << 7U),
-    SW_GOSUB_R2_BUSY         = (1U << 8U),
-    SW_REMOTE                = (1U << 9U),
-    SW_TARGET_REACHED        = (1U << 10U),
-    SW_INTERNAL_LIMIT_ACTIVE = (1U << 11U),
-    SW_SETPOINT_ACK          = (1U << 12U), // In Homing Mode, this is Position Actual adjusted
-    SW_MOVE_ERROR            = (1U << 13U),
-    SW_USER_CONTROLLED       = (1U << 14U),
-    SW_UNUSED                = (1U << 15U),
-    SW_MAX                   = (0xFFFFU)
+    SW_READY_TO_SWITCH_ON    = (1u << 0u),
+    SW_SWITCHED_ON           = (1u << 1u),
+    SW_OPERATION_ENABLED     = (1u << 2u),
+    SW_FAULT                 = (1u << 3u),
+    SW_VOLTAGE_ENABLED       = (1u << 4u),
+    SW_QUICK_STOP            = (1u << 5u),
+    SW_SWITCH_ON_DISABLED    = (1u << 6u),
+    SW_WARNING               = (1u << 7u),
+    SW_GOSUB_R2_BUSY         = (1u << 8u),
+    SW_REMOTE                = (1u << 9u),
+    SW_TARGET_REACHED        = (1u << 10u),
+    SW_INTERNAL_LIMIT_ACTIVE = (1u << 11u),
+    SW_SETPOINT_ACK          = (1u << 12u), // In Homing Mode, this is Position Actual adjusted
+    SW_MOVE_ERROR            = (1u << 13u),
+    SW_USER_CONTROLLED       = (1u << 14u),
+    SW_UNUSED                = (1u << 15u),
+    SW_MAX                   = (0xFFFFu)
 } StatusWord_en;
 
 typedef enum : uint16_t {
-    CW_SWITCH_ON        = (1U << 0U),
-    CW_ENABLE_VOLTAGE   = (1U << 1U),
-    CW_QUICK_STOP       = (1U << 2U),
-    CW_ENABLE_OPERATION = (1U << 3U),
-    CW_NEW_SETPOINT     = (1U << 4U),
-    CW_CHANGE_SET_NOW   = (1U << 5U),
-    CW_RELATIVE         = (1U << 6U),
-    CW_FAULT_RESET      = (1U << 7U),
-    CW_HALT             = (1U << 8U),
-    CW_PP_SPECIFIC      = (1U << 9U),
-    CW_RESERVED         = (1U << 10U),
-    CW_USER_RCAN2       = (1U << 11U),
-    CW_UNUSED_01        = (1U << 12U),
-    CW_UNUSED_02        = (1U << 13U),
-    CW_UNUSED_03        = (1U << 14U),
-    CW_IP_BUF_RESET     = (1U << 15U),
-    CW_MAX              = (0xFFFFU)
+    CW_SWITCH_ON        = (1u << 0u),
+    CW_ENABLE_VOLTAGE   = (1u << 1u),
+    CW_QUICK_STOP       = (1u << 2u),
+    CW_ENABLE_OPERATION = (1u << 3u),
+    CW_NEW_SETPOINT     = (1u << 4u),
+    CW_CHANGE_SET_NOW   = (1u << 5u),
+    CW_RELATIVE         = (1u << 6u),
+    CW_FAULT_RESET      = (1u << 7u),
+    CW_HALT             = (1u << 8u),
+    CW_PP_SPECIFIC      = (1u << 9u),
+    CW_RESERVED         = (1u << 10u),
+    CW_USER_RCAN2       = (1u << 11u),
+    CW_UNUSED_01        = (1u << 12u),
+    CW_UNUSED_02        = (1u << 13u),
+    CW_UNUSED_03        = (1u << 14u),
+    CW_IP_BUF_RESET     = (1u << 15u),
+    CW_MAX              = (0xFFFFu)
 } ControlWord_en;
 
 using can_rx_fn = uint8_t (*)(struct can_frame *frame, uint16_t cob_id);

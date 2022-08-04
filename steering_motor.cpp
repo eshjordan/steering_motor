@@ -1,5 +1,5 @@
 
-#if(0)
+#if(1)
 
 #include "CANopen.hpp"
 #include "endian.hpp"
@@ -19,9 +19,6 @@ const CANopen CANOPEN(rx_fn, tx_fn);
 void initMotor(uint32_t prof_vel, uint32_t prof_accel, uint32_t prof_decel)
 {
     uint16_t cob_id = CANOPEN_FN_SDO_RX + SM_NODE_ID;
-
-//    can_raw_frame_t raw_frame;
-    raw_frame.id = cob_id;
 
     /*Clear the faults in the Control Word (6040h)*/
     printf("Expected: 0x2B40600000000000\n");
