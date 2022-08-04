@@ -3,9 +3,6 @@
 
 #include "CANopen.hpp"
 
-
-MCP2515 mcp2515(10);
-
 void initMotor(uint32_t, uint32_t, uint32_t);
 void sendMessageCAN(uint32_t, uint8_t, uint64_t);
 
@@ -20,14 +17,29 @@ int minEncoderIncrement;
 int maxEncoderIncrement;
 int convertedDeltaEncoderInc;
 
+MCP2515 mcp2515(10);
 
 using can_rx_fn = uint8_t (*)(struct can_frame *frame, uint16_t cob_id);
 
 using can_tx_fn = uint8_t (*)(const struct can_frame *frame);
 
 
-uint8_t rx_fn(struct can_frame *frame, uint16_t cob_id) {return 0;}
-uint8_t tx_fn(const struct can_frame *frame) {return 0;}
+uint8_t rx_fn(struct can_frame *frame, uint16_t cob_id) { 
+  struct can_frame canMsg;
+
+  for (int i = 0; i < TIME_OUT; i++) {
+    if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK && canMsg.can_id == cob_id) {
+      *frame = canMsg;
+      return 0; //Rx success
+    }
+  } 
+
+  return 1; //Timeout
+}
+
+uint8_t tx_fn(const struct can_frame *frame) {
+  mcp2515.sendMessage(frame);
+}
 
 void setup() {
   CANopen can_open();
