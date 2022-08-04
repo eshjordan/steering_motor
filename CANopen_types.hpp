@@ -25,14 +25,29 @@
 
 inline void print_byte_binary(uint8_t data) { printf(BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data)); }
 
-inline void print_frame_data(uint8_t *data)
+inline void print_can_frame_data(const void *data)
 {
     printf("0x");
     for (uint8_t i = 0; i < 8; i++)
     {
-        printf("%02hx", data[i]);
+        printf("%02hhx", ((uint8_t *)data)[i]);
     }
     printf("\n");
+}
+
+constexpr inline uint32_t radians_to_encoder_count(const double radians)
+{
+    constexpr uint16_t encoder_resolution = 8000U;
+    constexpr double pi                   = 3.14159265358979323846;
+    return (encoder_resolution * radians) / (2 * pi);
+}
+
+constexpr inline uint32_t calculate_velocity(const double rad_per_sec)
+{
+    constexpr uint16_t sample_rate_hz = 8000U;
+    constexpr double sample_period    = 1.0 / sample_rate_hz;
+    uint32_t encoder_count            = radians_to_encoder_count(rad_per_sec);
+    return (encoder_count * sample_period) * (1U << 16U);
 }
 
 /** Types **/
@@ -41,7 +56,7 @@ inline void print_frame_data(uint8_t *data)
  * @brief CANopen function specifier.
  *
  */
-using CANopenFunction_en = enum CANopenFunction_en : uint16_t {
+typedef enum : uint16_t {
     CANOPEN_FN_NMT         = 0x000U, // NMT node control, slave RX
     CANOPEN_FN_FAILSAFE    = 0x001U, // Global failsafe command
     CANOPEN_FN_SYNC        = 0x080U, // Sync (see heartbeat/Timer), slave RX
@@ -60,53 +75,53 @@ using CANopenFunction_en = enum CANopenFunction_en : uint16_t {
     CANOPEN_FN_NMT_MONITOR = 0x700U, // NMT node monitoring, slave TX, + NodeID
     CANOPEN_FN_LSS_TX      = 0x7E4U, // Layer Setting Service (LSS), slave TX
     CANOPEN_FN_LSS_RX      = 0x7E5U, // Layer Setting Service (LSS), slave RX
-};
+} CANopenFunction_en;
 
 /**
  * @brief NMT command code
  *
  */
-using NMT_Command_en = enum NMT_Command_en : uint8_t {
+typedef enum : uint8_t {
     NMT_COMMAND_OPERATIONAL          = 0x01U, // Go to 'operational'
     NMT_COMMAND_STOPPED              = 0x02U, // Go to 'stopped'
     NMT_COMMAND_PRE_OPERATIONAL      = 0x80U, // Go to 'pre-operational'
     NMT_COMMAND_RESET_NODE           = 0x81U, // Go to 'reset node'
     NMT_COMMAND_RESET_COMMUNNICATION = 0x82U, // Go to 'reset communication'
-};
+} NMT_Command_en;
 
 /**
  * @brief NMT is the Network Management protocol.
  *
  */
-using NMT_t = struct NMT_t {
+typedef struct {
     NMT_Command_en requested_state;
     uint8_t addressed_node; // Node to set state of, if 0, send to all nodes on the bus
-};
+} NMT_t;
 
 /**
  * @brief NMT States
  *
  */
-using NMT_State_en = enum NMT_State_en : uint8_t {
+typedef enum : uint8_t {
     NMT_STATE_BOOTUP          = 0x00U,
     NMT_STATE_STOPPED         = 0x04U,
     NMT_STATE_OPERATIONAL     = 0x05U,
     NMT_STATE_PRE_OPERATIONAL = 0x7fU,
-};
+} NMT_State_en;
 
 /**
  * @brief NMT Data Structure
  *
  */
-using NMT_Heartbeat_t = struct NMT_Heartbeat_t {
+typedef struct {
     NMT_State_en state;
-};
+} NMT_Heartbeat_t;
 
 /**
  * @brief CCS is the client command specifier of the SDO transfer.
  *
  */
-using CCS_en = enum CCS_en : uint8_t {
+typedef enum : uint8_t {
     CCS_DOWNLOAD          = 0x00U, // SDO segment download
     CCS_INITIATE_DOWNLOAD = 0x01U, // SDO initiating download
     CCS_INITIATE_UPLOAD   = 0x02U, // SDO initiating upload
@@ -114,13 +129,13 @@ using CCS_en = enum CCS_en : uint8_t {
     CCS_ABORT             = 0x04U, // SDO abort transfer
     CCS_BLOCK_UPLOAD      = 0x05U, // SDO block upload
     CCS_BLOCK_DOWNLOAD    = 0x06U, // SDO block download
-};
+} CCS_en;
 
 /**
  * @brief SDO message structure.
  *
  */
-using SDO_t = struct SDO_t {
+typedef struct __attribute__((__packed__)) {
     uint8_t s : 1; // if set, indicates that the data size is specified in n (if e is set) or in the data part of the
                    // message
     uint8_t e : 1; // if set, indicates an expedited transfer, i.e. all data exchanged are contained within the message.
@@ -134,13 +149,13 @@ using SDO_t = struct SDO_t {
     uint8_t subindex;             // subindex of the object dictionary variable
     uint8_t data[4]; // data to be uploaded in the case of an expedited transfer (e is set), or the size of the data to
                      // be uploaded (s is set, e is not set)
-} __attribute__((__packed__));
+} SDO_t;
 
 /**
  * @brief Status Word bit structure
  *
  */
-using StatusWord_en = enum StatusWord_en : uint16_t {
+typedef enum : uint16_t {
     SW_READY_TO_SWITCH_ON    = (1U << 0U),
     SW_SWITCHED_ON           = (1U << 1U),
     SW_OPERATION_ENABLED     = (1U << 2U),
@@ -158,13 +173,13 @@ using StatusWord_en = enum StatusWord_en : uint16_t {
     SW_USER_CONTROLLED       = (1U << 14U),
     SW_UNUSED                = (1U << 15U),
     SW_MAX                   = (0xFFFFU)
-};
+} StatusWord_en;
 
 /**
  * @brief Control Word bit structure
  *
  */
-using ControlWord_en = enum ControlWord_en : uint16_t {
+typedef enum : uint16_t {
     CW_SWITCH_ON        = (1U << 0U),
     CW_ENABLE_VOLTAGE   = (1U << 1U),
     CW_QUICK_STOP       = (1U << 2U),
@@ -182,25 +197,54 @@ using ControlWord_en = enum ControlWord_en : uint16_t {
     CW_UNUSED_03        = (1U << 14U),
     CW_IP_BUF_RESET     = (1U << 15U),
     CW_MAX              = (0xFFFFU)
-};
+} ControlWord_en;
+
+/**
+ * @brief Motor Control Mode bytes
+ *
+ */
+typedef enum : int8_t {
+    MC_CAM_ENCODER_POSITION_MODE  = -12,
+    MC_ENCODER_POSITION_MODE      = -11,
+    MC_RESERVED_01_MODE           = -10,
+    MC_RESERVED_02_MODE           = -9,
+    MC_RESERVED_03_MODE           = -8,
+    MC_RESERVED_04_MODE           = -7,
+    MC_RESERVED_05_MODE           = -6,
+    MC_RESERVED_06_MODE           = -5,
+    MC_RESERVED_07_MODE           = -4,
+    MC_STEP_DIRECTION_MODE        = -3,
+    MC_FOLLOW_QUAD_ENCODER_MODE   = -2,
+    MC_RESERVED_08_MODE           = -1,
+    MC_NULL_MODE                  = 0,
+    MC_PROFILE_POSITION_MODE      = 1,
+    MC_RESERVED_09_MODE           = 2,
+    MC_PROFILE_VELOCITY_MODE      = 3,
+    MC_PROFILE_TORQUE_MODE        = 4,
+    MC_RESERVED_10_MODE           = 5,
+    MC_HOMING_MODE                = 6,
+    MC_INTERPOLATED_POSITION_MODE = 7,
+    MC_CYCLIC_SYNC_POSITION_MODE  = 8,
+    MC_MAX                        = 9,
+} MotionControlMode_en;
 
 /**
  * @brief Generic CAN receive function type
  *
  */
-using can_rx_fn = uint8_t (*)(struct can_frame *frame, uint16_t cob_id);
+typedef uint8_t (*can_rx_fn)(struct can_frame *frame, uint16_t cob_id);
 
 /**
  * @brief Generic CAN transmit function type
  *
  */
-using can_tx_fn = uint8_t (*)(const struct can_frame *frame);
+typedef uint8_t (*can_tx_fn)(const struct can_frame *frame);
 
 /**
  * @brief CANopen object dictionary structure for the motor.
  *
  */
-using CANopenObject_en = enum : uint16_t {
+typedef enum : uint16_t {
     /** @brief Communication Profile Objects **/
     OBJ_Device_Type                             = 0x1000U,
     OBJ_Error_Register                          = 0x1001U,
@@ -315,4 +359,4 @@ using CANopenObject_en = enum : uint16_t {
     OBJ_Motor_Type                       = 0x6402U,
     OBJ_Supported_Drive_Modes            = 0x6502U,
     OBJ_Single_Device_Type               = 0x67FFU,
-};
+} CANopenObject_en;

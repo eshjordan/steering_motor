@@ -8,7 +8,9 @@ Checks:          'boost-*, bugprone-*, clang-analyzer-*, cppcoreguidelines-*, go
                   -cppcoreguidelines-avoid-magic-numbers,
                   -readability-magic-numbers,
                   -cppcoreguidelines-pro-type-vararg,
-                  -hicpp-vararg'
+                  -hicpp-vararg,
+                  -modernize-use-using
+                  -hicpp-avoid-c-arrays'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -23,27 +25,27 @@ CheckOptions:
     value:           llvm
   - key:             modernize-replace-auto-ptr.IncludeStyle
     value:           llvm
-  - key:             readability-identifier-naming.NamespaceCase       
+  - key:             readability-identifier-naming.NamespaceCase
     value:           CamelCase
-  - key:             readability-identifier-naming.ClassCase           
-    value:           CamelCase 
-  - key:             readability-identifier-naming.ClassMemberPrefix 
-    value:           m_        
-  - key:             readability-identifier-naming.PrivateMemberPrefix 
-    value:           m_ 
-  - key:             readability-identifier-naming.StructCase          
-    value:           CamelCase 
-  - key:             readability-identifier-naming.FunctionCase        
+  - key:             readability-identifier-naming.ClassCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.ClassMemberPrefix
+    value:           m_
+  - key:             readability-identifier-naming.PrivateMemberPrefix
+    value:           m_
+  - key:             readability-identifier-naming.StructCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.FunctionCase
     value:           lower_case
-  - key:             readability-identifier-naming.ClassMemberCase        
+  - key:             readability-identifier-naming.ClassMemberCase
     value:           lower_case
-  - key:             readability-identifier-naming.ClassMethodCase        
+  - key:             readability-identifier-naming.ClassMethodCase
     value:           lower_case
-  - key:             readability-identifier-naming.VariableCase        
+  - key:             readability-identifier-naming.VariableCase
     value:           lower_case
-  - key:             readability-identifier-naming.ParameterCase        
+  - key:             readability-identifier-naming.ParameterCase
     value:           lower_case
-  - key:             readability-identifier-naming.GlobalConstantCase  
+  - key:             readability-identifier-naming.GlobalConstantCase
     value:           UPPER_CASE
 ...
 

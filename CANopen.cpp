@@ -7,13 +7,14 @@
 #include <stdio.h>
 #include <string.h>
 
-SDO_t CANopen::sdo_read(uint16_t node_id, uint16_t object, uint8_t subindex, uint8_t *req_data, uint8_t req_data_length,
-                        uint8_t *rx_data, uint8_t *rx_data_length) const
+SDO_t CANopen::sdo_read(uint8_t node_id, CANopenObject_en object, uint8_t subindex, void *req_data,
+                        uint8_t req_data_length, void *rx_data, uint8_t *rx_data_length) const
 {
     // Determine COB ID for slave to transmit.
-    uint16_t rd_cob_id = node_id + CANOPEN_FN_SDO_TX;
+    const uint16_t request_cob_id = node_id + CANOPEN_FN_SDO_TX;
+
     // Determine COB ID for master receive from slave
-    uint16_t wr_cob_id = node_id + CANOPEN_FN_SDO_RX;
+    const uint16_t result_cob_id = node_id + CANOPEN_FN_SDO_RX;
 
     // Generate an SDO message for request.
     SDO_t sdo_msg    = {0};
@@ -27,7 +28,7 @@ SDO_t CANopen::sdo_read(uint16_t node_id, uint16_t object, uint8_t subindex, uin
 
     // Generate a request CAN frame from SDO message.
     can_frame tx_frame = {0};
-    tx_frame.can_id    = wr_cob_id;
+    tx_frame.can_id    = request_cob_id;
     memcpy(tx_frame.data, &sdo_msg, sizeof(SDO_t));
     tx_frame.can_dlc = sizeof(SDO_t);
     m_tx_function(&tx_frame); // Transmit request
@@ -35,45 +36,43 @@ SDO_t CANopen::sdo_read(uint16_t node_id, uint16_t object, uint8_t subindex, uin
     // Generate a CAN frame to be populated with received frame.
     can_frame rx_frame = {0};
 
-    m_rx_function(&rx_frame, rd_cob_id);
+    m_rx_function(&rx_frame, result_cob_id);
 
     // Extract data from received frame to SDO message.
     SDO_t rx_sdo_msg = {0};
     memcpy(&rx_sdo_msg, rx_frame.data, sizeof(SDO_t));
-    *rx_data_length      = sizeof(SDO_t::data) - rx_sdo_msg.n;
-    *(uint32_t *)rx_data = swap_uint32(*(uint32_t *)rx_sdo_msg.data);
+    *rx_data_length = sizeof(SDO_t::data) - rx_sdo_msg.n;
 
     return rx_sdo_msg;
 }
 
-SDO_t CANopen::sdo_write(uint8_t node_id, uint16_t object, uint8_t subindex, uint8_t *data, uint8_t data_length) const
+SDO_t CANopen::sdo_write(uint8_t node_id, CANopenObject_en object, uint8_t subindex, void *data,
+                         uint8_t data_length) const
 {
     // Determine COB ID for slave receive
-    uint16_t wr_cob_id = node_id + CANOPEN_FN_SDO_RX;
-    // Determine COB ID for slave transmit
-    uint16_t rd_cob_id = node_id + CANOPEN_FN_SDO_TX;
+    const uint16_t request_cob_id = node_id + CANOPEN_FN_SDO_RX;
 
-    SDO_t sdo_msg = {0};
-    sdo_msg.ccs   = CCS_INITIATE_DOWNLOAD;
-    sdo_msg.n     = sizeof(SDO_t::data) - data_length;
-    sdo_msg.e     = SDO_EXPEDITED_ENABLE;
-    sdo_msg.s     = SDO_SIZE_ENABLE;
-    sdo_msg.index = object;
-    // sdo_msg.index    = swap_uint16(object);
+    // Determine COB ID for slave transmit
+    const uint16_t result_cob_id = node_id + CANOPEN_FN_SDO_TX;
+
+    SDO_t sdo_msg    = {0};
+    sdo_msg.ccs      = CCS_INITIATE_DOWNLOAD;
+    sdo_msg.n        = sizeof(SDO_t::data) - data_length;
+    sdo_msg.e        = SDO_EXPEDITED_ENABLE;
+    sdo_msg.s        = SDO_SIZE_ENABLE;
+    sdo_msg.index    = object;
     sdo_msg.subindex = subindex;
     memcpy(sdo_msg.data, data, data_length);
-    // *(uint32_t *)sdo_msg.data = swap_uint32(*(uint32_t *)sdo_msg.data);
 
     // Generate a can frame to populate and transmit.
     can_frame tx_frame = {0};
-    tx_frame.can_id    = wr_cob_id;
+    tx_frame.can_id    = request_cob_id;
     memcpy(tx_frame.data, &sdo_msg, sizeof(SDO_t));
     tx_frame.can_dlc = sizeof(SDO_t);
-    print_frame_data(tx_frame.data);
     m_tx_function(&tx_frame); // Transmit frame
 
     // Generate a CAN frame and listen for response
     can_frame rx_frame = {0};
-    m_rx_function(&rx_frame, rd_cob_id);
+    m_rx_function(&rx_frame, result_cob_id);
     return {};
 }
