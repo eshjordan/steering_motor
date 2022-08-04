@@ -1,7 +1,3 @@
-// typedef enum : uint16_t {
-
-// } DriveState_en;
-
 #pragma once
 
 #include "CANopen_types.hpp"
@@ -9,6 +5,10 @@
 class DriveStateMachine
 {
 public:
+    /**
+     * @brief Allowable states of the drive state machine.
+     *
+     */
     enum DriveState_en : uint16_t {
         DS_NOT_READY             = SW_READY_TO_SWITCH_ON,
         DS_SWITCH_ON_DISABLED    = SW_SWITCH_ON_DISABLED,
@@ -19,6 +19,22 @@ public:
         DS_FAULT                 = SW_FAULT,
         DS_FAULT_REACTION_ACTIVE = SW_FAULT | SW_OPERATION_ENABLED | SW_SWITCHED_ON | SW_READY_TO_SWITCH_ON,
         DS_MAX                   = 0xFFFFU
+    };
+
+    /**
+     * @brief Status Word bitmasks for each Drive State
+     *
+     */
+    enum DriveStateMask_en : uint16_t {
+        DS_NOT_READY_MASK             = 0b0000000001001111U,
+        DS_SWITCH_ON_DISABLED_MASK    = 0b0000000001001111U,
+        DS_SWITCH_ON_READY_MASK       = 0b0000000001101111U,
+        DS_SWITCHED_ON_MASK           = 0b0000000001101111U,
+        DS_OPERATION_ENABLED_MASK     = 0b0000000001101111U,
+        DS_QUICK_STOP_ACTIVE_MASK     = 0b0000000001101111U,
+        DS_FAULT_MASK                 = 0b0000000001001111U,
+        DS_FAULT_REACTION_ACTIVE_MASK = 0b0000000001001111U,
+        DS_MAX_MASK                   = 0xFFFFU
     };
 
     /**

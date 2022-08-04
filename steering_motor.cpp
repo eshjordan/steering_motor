@@ -1,5 +1,5 @@
 
-#if(1)
+#if(0)
 
 #include "CANopen.hpp"
 #include "endian.hpp"
@@ -23,7 +23,7 @@ void initMotor(uint32_t prof_vel, uint32_t prof_accel, uint32_t prof_decel)
     /*Clear the faults in the Control Word (6040h)*/
     printf("Expected: 0x2B40600000000000\n");
     uint8_t empty[4] = {0};
-    CANOPEN.sdo_write(SM_NODE_ID, Control_Word, 0, empty, sizeof(empty));
+    CANOPEN.sdo_write(SM_NODE_ID, OBJ_Control_Word, 0, empty, sizeof(empty));
     // ...
 }
 
