@@ -5,6 +5,7 @@ project(CANopen LANGUAGES C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_BUILD_TYPE "Debug")
+add_compile_definitions(ENABLE_CPP_BUILD)
 
 set(CXX_SRC
     "./CANopen.cpp"

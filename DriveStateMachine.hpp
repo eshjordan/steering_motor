@@ -37,7 +37,7 @@ public:
         DS_MAX_MASK                   = 0xFFFFU
     };
 
-    constexpr static inline const char *drive_state_to_string(DriveState_en state)
+    static inline const char *drive_state_to_string(DriveState_en state)
     {
         switch (state)
         {

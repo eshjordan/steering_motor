@@ -1,6 +1,5 @@
 
-#include <unistd.h>
-#if (1)
+#if defined ENABLE_CPP_BUILD
 
 #include "CANopen.hpp"
 #include "endian.hpp"
@@ -8,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 constexpr uint8_t SM_NODE_ID = 0x4D;
 

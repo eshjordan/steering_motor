@@ -1,4 +1,6 @@
 
+#if defined ENABLE_CPP_BUILD
+
 #include "DriveStateMachine.hpp"
 #include "gtest/gtest.h"
 
@@ -105,3 +107,5 @@ TEST_F(TestDriveStateMachine, testValidTransitions)
                          : "DS_QUICK_STOP_ACTIVE to DS_SWITCH_ON_DISABLED NOT OK\n");
     printf("Control Word: 0x%04x\n", control_word);
 }
+
+#endif
