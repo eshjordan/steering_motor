@@ -50,6 +50,14 @@ constexpr inline uint32_t calculate_velocity(const double rad_per_sec)
     return (encoder_count * sample_period) * (1U << 16U);
 }
 
+constexpr inline uint32_t calculate_acceleration(const double rad_per_sec_per_sec)
+{
+    constexpr uint16_t sample_rate_hz = 8000U;
+    constexpr double sample_period    = 1.0 / sample_rate_hz;
+    uint32_t encoder_count            = radians_to_encoder_count(rad_per_sec_per_sec);
+    return (encoder_count * sample_period * sample_period) * (1U << 16U);
+}
+
 /** Types **/
 
 /**

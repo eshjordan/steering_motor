@@ -10,7 +10,7 @@ public:
      *
      */
     enum DriveState_en : uint16_t {
-        DS_NOT_READY             = SW_READY_TO_SWITCH_ON,
+        DS_NOT_READY             = 0U,
         DS_SWITCH_ON_DISABLED    = SW_SWITCH_ON_DISABLED,
         DS_SWITCH_ON_READY       = SW_QUICK_STOP | SW_READY_TO_SWITCH_ON,
         DS_SWITCHED_ON           = SW_QUICK_STOP | SW_SWITCHED_ON | SW_READY_TO_SWITCH_ON,
@@ -37,6 +37,23 @@ public:
         DS_MAX_MASK                   = 0xFFFFU
     };
 
+    constexpr static inline const char *drive_state_to_string(DriveState_en state)
+    {
+        switch (state)
+        {
+        case DS_NOT_READY: return "DS_NOT_READY";
+        case DS_SWITCH_ON_DISABLED: return "DS_SWITCH_ON_DISABLED";
+        case DS_SWITCH_ON_READY: return "DS_SWITCH_ON_READY";
+        case DS_SWITCHED_ON: return "DS_SWITCHED_ON";
+        case DS_OPERATION_ENABLED: return "DS_OPERATION_ENABLED";
+        case DS_QUICK_STOP_ACTIVE: return "DS_QUICK_STOP_ACTIVE";
+        case DS_FAULT: return "DS_FAULT";
+        case DS_FAULT_REACTION_ACTIVE: return "DS_FAULT_REACTION_ACTIVE";
+        case DS_MAX: return "DS_MAX";
+        default: return "Unknown Drive State";
+        }
+    }
+
     /**
      * @brief Safely update the state of the drive, and set the Control Word used to perform the transition.
      * @see DriveStateMachine::valid_transition
@@ -48,6 +65,13 @@ public:
      * @return false otherwise
      */
     bool set_state(const DriveState_en &state, uint16_t *control_word);
+
+    /**
+     * @brief Unsafely update the state of the drive, use when updating the state from a received Status Word.
+     *
+     * @param state New state to move to
+     */
+    inline void force_set_state(const DriveState_en &state) { m_current_state = state; };
 
     /**
      * @brief Get the current state of the drive.
@@ -76,7 +100,7 @@ public:
      * @param status_word Status Word from the drive
      * @return DriveState_en State represented by the Status Word
      */
-    static DriveState_en calculate_state(uint16_t status_word);
+    static DriveState_en calculate_state(const uint16_t &status_word);
 
 private:
     DriveState_en m_current_state = DriveState_en::DS_NOT_READY;

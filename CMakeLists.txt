@@ -4,11 +4,29 @@ project(CANopen LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-std=c++2a -g)
 set(CMAKE_BUILD_TYPE "Debug")
 
-add_executable(CANopen
-    "./steering_motor.cpp"
+set(CXX_SRC
     "./CANopen.cpp"
     "./DriveStateMachine.cpp"
 )
+
+add_executable(CANopen
+    "./steering_motor.cpp"
+    ${CXX_SRC}
+)
+
+enable_testing()
+
+add_executable(CANopen_test
+    "./TestDriveStateMachine.cpp"
+    ${CXX_SRC}
+)
+
+target_link_libraries(CANopen_test
+    gtest
+    gtest_main
+    pthread
+)
+
+add_test(NAME CANopen_test COMMAND CANopen_test)

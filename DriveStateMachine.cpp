@@ -1,6 +1,6 @@
 #include "DriveStateMachine.hpp"
 
-DriveStateMachine::DriveState_en DriveStateMachine::calculate_state(const uint16_t status_word)
+DriveStateMachine::DriveState_en DriveStateMachine::calculate_state(const uint16_t &status_word)
 {
     if ((status_word & DS_NOT_READY_MASK) == DS_NOT_READY) { return DS_NOT_READY; }
     if ((status_word & DS_SWITCH_ON_DISABLED_MASK) == DS_SWITCH_ON_DISABLED) { return DS_SWITCH_ON_DISABLED; }
