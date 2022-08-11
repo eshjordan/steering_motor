@@ -9,7 +9,9 @@ add_compile_definitions(ENABLE_CPP_BUILD)
 
 set(CXX_SRC
     "./CANopen.cpp"
+    "./DriveStateController.cpp"
     "./DriveStateMachine.cpp"
+    "./unit_conversions.cpp"
 )
 
 add_executable(CANopen

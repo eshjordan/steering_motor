@@ -7,14 +7,14 @@
 #include <stdio.h>
 #include <string.h>
 
-SDO_t CANopen::sdo_read(uint8_t node_id, CANopenObject_en object, uint8_t subindex, void *req_data,
-                        uint8_t req_data_length, void *rx_data, uint8_t *rx_data_length) const
+SDO_t CANopen::sdo_read(CANopenObject_en object, uint8_t subindex, void *req_data, uint8_t req_data_length,
+                        void *rx_data, uint8_t *rx_data_length) const
 {
     // Determine COB ID for slave to transmit.
-    const uint16_t request_cob_id = node_id + CANOPEN_FN_SDO_TX;
+    const uint16_t request_cob_id = m_node_id + CANOPEN_FN_SDO_TX;
 
     // Determine COB ID for master receive from slave
-    const uint16_t result_cob_id = node_id + CANOPEN_FN_SDO_RX;
+    const uint16_t result_cob_id = m_node_id + CANOPEN_FN_SDO_RX;
 
     // Generate an SDO message for request.
     SDO_t sdo_msg    = {0};
@@ -46,14 +46,13 @@ SDO_t CANopen::sdo_read(uint8_t node_id, CANopenObject_en object, uint8_t subind
     return rx_sdo_msg;
 }
 
-SDO_t CANopen::sdo_write(uint8_t node_id, CANopenObject_en object, uint8_t subindex, void *data,
-                         uint8_t data_length) const
+SDO_t CANopen::sdo_write(CANopenObject_en object, uint8_t subindex, void *data, uint8_t data_length) const
 {
     // Determine COB ID for slave receive
-    const uint16_t request_cob_id = node_id + CANOPEN_FN_SDO_RX;
+    const uint16_t request_cob_id = m_node_id + CANOPEN_FN_SDO_RX;
 
     // Determine COB ID for slave transmit
-    const uint16_t result_cob_id = node_id + CANOPEN_FN_SDO_TX;
+    const uint16_t result_cob_id = m_node_id + CANOPEN_FN_SDO_TX;
 
     SDO_t sdo_msg    = {0};
     sdo_msg.ccs      = CCS_INITIATE_DOWNLOAD;
