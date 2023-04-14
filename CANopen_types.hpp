@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include "autowp-mcp2515/can.h"
+#include <memory.h>
 
 #define TIME_OUT 10000
 
@@ -10,8 +12,10 @@
     (byte & 0x80U ? '1' : '0'), (byte & 0x40U ? '1' : '0'), (byte & 0x20U ? '1' : '0'), (byte & 0x10U ? '1' : '0'),    \
         (byte & 0x08U ? '1' : '0'), (byte & 0x04U ? '1' : '0'), (byte & 0x02U ? '1' : '0'), (byte & 0x01U ? '1' : '0')
 
+#define GET_BIT(value, bit) (((value) >> (uint8_t)(bit)) & 1u)
 #define SET_BIT(value, bit) ((value) |= (__typeof__(value))(1u << (uint8_t)(bit)))
 #define CLEAR_BIT(value, bit) ((value) &= (__typeof__(value))(~(__typeof__(value))(1u << (uint8_t)(bit))))
+#define GET_BIT_PATTERN(value, pattern) ((value) & (__typeof__(value))(pattern))
 #define SET_BIT_PATTERN(value, pattern) ((value) |= (__typeof__(value))(pattern))
 #define CLEAR_BIT_PATTERN(value, pattern) ((value) &= (__typeof__(value))(~(__typeof__(value))(pattern)))
 
@@ -121,7 +125,7 @@ typedef enum : uint8_t {
  * @brief SDO message structure.
  *
  */
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__, __aligned__(1))) {
     uint8_t s : 1; // if set, indicates that the data size is specified in n (if e is set) or in the data part of the
                    // message
     uint8_t e : 1; // if set, indicates an expedited transfer, i.e. all data exchanged are contained within the message.
@@ -136,6 +140,55 @@ typedef struct __attribute__((__packed__)) {
     uint8_t data[4]; // data to be uploaded in the case of an expedited transfer (e is set), or the size of the data to
                      // be uploaded (s is set, e is not set)
 } SDO_t;
+
+typedef enum : uint8_t {
+    SDO_S_BIT_OFFSET = 7U,
+    SDO_E_BIT_OFFSET = 6U,
+    SDO_N_BIT_OFFSET = 4U,
+    SDO_CCS_BIT_OFFSET = 0U,
+} SDO_Bit_Offset_t;
+
+typedef enum : uint8_t {
+    SDO_S_BITMASK = 0b10000000,
+    SDO_E_BITMASK = 0b01000000,
+    SDO_N_BITMASK = 0b00110000,
+    SDO_CCS_BITMASK = 0b00000111,
+} SDO_Bitmask_t;
+
+typedef enum : uint8_t {
+    SDO_S_BYTE_OFFSET = 0U,
+    SDO_E_BYTE_OFFSET = 0U,
+    SDO_N_BYTE_OFFSET = 0U,
+    SDO_CCS_BYTE_OFFSET = 0U,
+    SDO_INDEX_BYTE_OFFSET = 1U,
+    SDO_SUBINDEX_BYTE_OFFSET = 3U,
+    SDO_DATA_BYTE_OFFSET = 4U,
+} SDO_Byte_Offset_t;
+
+static inline void sdo_to_can_frame(uint16_t id, SDO_t *sdo_msg, struct can_frame *can_msg)
+{
+    can_msg->can_id  = id;
+    can_msg->can_dlc = 8;
+    SET_BIT_PATTERN(can_msg->data[SDO_S_BYTE_OFFSET], sdo_msg->s << SDO_S_BIT_OFFSET);
+    SET_BIT_PATTERN(can_msg->data[SDO_E_BYTE_OFFSET], sdo_msg->e << SDO_E_BIT_OFFSET);
+    SET_BIT_PATTERN(can_msg->data[SDO_N_BYTE_OFFSET], sdo_msg->n << SDO_N_BIT_OFFSET);
+    SET_BIT_PATTERN(can_msg->data[SDO_CCS_BYTE_OFFSET], sdo_msg->ccs << SDO_CCS_BIT_OFFSET);
+    can_msg->data[SDO_INDEX_BYTE_OFFSET] = sdo_msg->index >> 8U;
+    can_msg->data[SDO_INDEX_BYTE_OFFSET+1] = sdo_msg->index & 0xFFU;
+    can_msg->data[SDO_SUBINDEX_BYTE_OFFSET] = sdo_msg->subindex;
+    memcpy(&can_msg->data[SDO_DATA_BYTE_OFFSET], sdo_msg->data, sizeof(sdo_msg->data));
+}
+
+static inline void can_frame_to_sdo(struct can_frame *can_msg, SDO_t *sdo_msg)
+{
+    sdo_msg->s = GET_BIT_PATTERN(can_msg->data[SDO_S_BYTE_OFFSET], SDO_S_BITMASK) >> SDO_S_BIT_OFFSET;
+    sdo_msg->e = GET_BIT_PATTERN(can_msg->data[SDO_E_BYTE_OFFSET], SDO_E_BITMASK) >> SDO_E_BIT_OFFSET;
+    sdo_msg->n = GET_BIT_PATTERN(can_msg->data[SDO_N_BYTE_OFFSET], SDO_N_BITMASK) >> SDO_N_BIT_OFFSET;
+    sdo_msg->ccs = (CCS_en)(GET_BIT_PATTERN(can_msg->data[SDO_CCS_BYTE_OFFSET], SDO_CCS_BITMASK) >> SDO_CCS_BIT_OFFSET);
+    sdo_msg->index = (can_msg->data[SDO_INDEX_BYTE_OFFSET] << 8U) | can_msg->data[SDO_INDEX_BYTE_OFFSET+1];
+    sdo_msg->subindex = can_msg->data[SDO_SUBINDEX_BYTE_OFFSET];
+    memcpy(sdo_msg->data, &can_msg->data[SDO_DATA_BYTE_OFFSET], sizeof(sdo_msg->data));
+}
 
 /**
  * @brief Status Word bit structure

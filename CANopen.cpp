@@ -28,9 +28,7 @@ SDO_t CANopen::sdo_read(CANopenObject_en object, uint8_t subindex, void *req_dat
 
     // Generate a request CAN frame from SDO message.
     can_frame tx_frame = {0};
-    tx_frame.can_id    = request_cob_id;
-    memcpy(tx_frame.data, &sdo_msg, sizeof(SDO_t));
-    tx_frame.can_dlc = sizeof(SDO_t);
+    sdo_to_can_frame(request_cob_id, &sdo_msg, &tx_frame);
     m_tx_function(&tx_frame); // Transmit request
 
     // Generate a CAN frame to be populated with received frame.
@@ -40,8 +38,9 @@ SDO_t CANopen::sdo_read(CANopenObject_en object, uint8_t subindex, void *req_dat
 
     // Extract data from received frame to SDO message.
     SDO_t rx_sdo_msg = {0};
-    memcpy(&rx_sdo_msg, rx_frame.data, sizeof(SDO_t));
+    can_frame_to_sdo(&rx_frame, &rx_sdo_msg);
     *rx_data_length = sizeof(SDO_t::data) - rx_sdo_msg.n;
+    memcpy(rx_data, rx_sdo_msg.data, *rx_data_length);
 
     return rx_sdo_msg;
 }
@@ -65,13 +64,17 @@ SDO_t CANopen::sdo_write(CANopenObject_en object, uint8_t subindex, void *data, 
 
     // Generate a can frame to populate and transmit.
     can_frame tx_frame = {0};
-    tx_frame.can_id    = request_cob_id;
-    memcpy(tx_frame.data, &sdo_msg, sizeof(SDO_t));
-    tx_frame.can_dlc = sizeof(SDO_t);
+    sdo_to_can_frame(request_cob_id, &sdo_msg, &tx_frame);
+
     m_tx_function(&tx_frame); // Transmit frame
 
     // Generate a CAN frame and listen for response
     can_frame rx_frame = {0};
     m_rx_function(&rx_frame, result_cob_id);
-    return {};
+
+    // Extract data from received frame to SDO message.
+    SDO_t rx_sdo_msg = {0};
+    can_frame_to_sdo(&rx_frame, &rx_sdo_msg);
+
+    return rx_sdo_msg;
 }

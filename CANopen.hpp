@@ -24,7 +24,7 @@ public:
     CANopen(const uint8_t node_id, const can_rx_fn &rx_function, const can_tx_fn &tx_function)
         : m_node_id(node_id), m_rx_function(rx_function), m_tx_function(tx_function){};
 
-    SDO_t sdo_read(CANopenObject_en object, uint8_t subindex, void *req_data, uint8_t req_data_length, void *rx_data,
-                   uint8_t *rx_data_length) const;
+    SDO_t sdo_read(CANopenObject_en object, uint8_t subindex, void *req_data, uint8_t req_data_length,
+                        void *rx_data, uint8_t *rx_data_length) const;
     SDO_t sdo_write(CANopenObject_en object, uint8_t subindex, void *data, uint8_t data_length) const;
 };
