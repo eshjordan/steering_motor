@@ -11,10 +11,10 @@ SDO_t CANopen::sdo_read(CANopenObject_en object, uint8_t subindex, void *req_dat
                         void *rx_data, uint8_t *rx_data_length) const
 {
     // Determine COB ID for slave to transmit.
-    const uint16_t request_cob_id = m_node_id + CANOPEN_FN_SDO_TX;
+    const uint16_t request_cob_id = m_node_id + CANOPEN_FN_SDO_RX;
 
     // Determine COB ID for master receive from slave
-    const uint16_t result_cob_id = m_node_id + CANOPEN_FN_SDO_RX;
+    const uint16_t result_cob_id = m_node_id + CANOPEN_FN_SDO_TX;
 
     // Generate an SDO message for request.
     SDO_t sdo_msg    = {0};
