@@ -105,7 +105,12 @@ protected:
     {
         uint8_t bytes_received = 0U;
         uint16_t status_word   = 0U;
-        m_canopen.sdo_read(OBJ_Status_Word, 0, nullptr, 0, &status_word, &bytes_received);
+        auto rx_sdo_1 = m_canopen.sdo_read(OBJ_Status_Word, 0, nullptr, 0, &status_word, &bytes_received);
+        if (rx_sdo_1.reserved_0) {
+            printf("Timeout waiting to read status word in update_current_state\n");
+            return;
+        }
+
         m_drive_state_machine.force_set_state(DriveStateMachine::calculate_state(status_word));
     }
 

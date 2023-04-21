@@ -30,43 +30,83 @@ void initMotor(uint32_t prof_vel, uint32_t prof_accel, uint32_t prof_decel)
 {
     printf("Clear Faults - Expected:            0x2b40600000000000\n");
     ControlWord_en control_word = CW_FAULT_RESET;
-    CANOPEN.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    auto sdo_rx_1 = CANOPEN.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    if(sdo_rx_1.reserved_0) {
+        printf("Timeout waiting to reset faults of control word in initMotor\n");
+        return;
+    }
 
     printf("Unset Clear Faults - Expected:      0x2b40600000000000\n");
     control_word = (ControlWord_en)0U;
-    CANOPEN.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    auto sdo_rx_2 = CANOPEN.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    if(sdo_rx_2.reserved_0) {
+        printf("Timeout waiting to clear control word in initMotor\n");
+        return;
+    }
 
     printf("Modes of Operation - Expected:      0x2f60600001000000\n");
     MotionControlMode_en motion_control_mode = MC_PROFILE_POSITION_MODE;
-    CANOPEN.sdo_write(OBJ_Modes_of_Operation, 0, &motion_control_mode, sizeof(motion_control_mode));
+    auto sdo_rx_3 = CANOPEN.sdo_write(OBJ_Modes_of_Operation, 0, &motion_control_mode, sizeof(motion_control_mode));
+    if(sdo_rx_3.reserved_0) {
+        printf("Timeout waiting to set profile position mode in initMotor\n");
+        return;
+    }
 
     printf("Set Position Origin - Expected:     0x2302220000000000\n");
     int32_t position_origin = 0;
-    CANOPEN.sdo_write(OBJ_Set_Position_Origin, 0, &position_origin, sizeof(position_origin));
+    auto sdo_rx_4 = CANOPEN.sdo_write(OBJ_Set_Position_Origin, 0, &position_origin, sizeof(position_origin));
+    if(sdo_rx_4.reserved_0) {
+        printf("Timeout waiting to set position origin in initMotor\n");
+        return;
+    }
 
     printf("Set Profile Vel - Expected:         0x2381600000000000\n");
     uint32_t profile_velocity = calculate_velocity(prof_vel);
-    CANOPEN.sdo_write(OBJ_Profile_Velocity_in_PP_Mode, 0, &profile_velocity, sizeof(profile_velocity));
+    auto sdo_rx_5 = CANOPEN.sdo_write(OBJ_Profile_Velocity_in_PP_Mode, 0, &profile_velocity, sizeof(profile_velocity));
+    if(sdo_rx_5.reserved_0) {
+        printf("Timeout waiting to set profile velocity in PP mode in initMotor\n");
+        return;
+    }
 
     printf("Set Profile Acc - Expected:         0x2383600000000000\n");
     uint32_t profile_accel = calculate_acceleration(prof_accel);
-    CANOPEN.sdo_write(OBJ_Profile_Acceleration, 0, &profile_accel, sizeof(profile_accel));
+    auto sdo_rx_6 = CANOPEN.sdo_write(OBJ_Profile_Acceleration, 0, &profile_accel, sizeof(profile_accel));
+    if(sdo_rx_6.reserved_0) {
+        printf("Timeout waiting to set position acceleration in initMotor\n");
+        return;
+    }
 
     printf("Set Profile Dec - Expected:         0x2384600000000000\n");
     uint32_t profile_decel = calculate_acceleration(prof_decel);
-    CANOPEN.sdo_write(OBJ_Profile_Deceleration, 0, &profile_decel, sizeof(profile_decel));
+    auto sdo_rx_7 = CANOPEN.sdo_write(OBJ_Profile_Deceleration, 0, &profile_decel, sizeof(profile_decel));
+    if(sdo_rx_7.reserved_0) {
+        printf("Timeout waiting to set position deceleration in initMotor\n");
+        return;
+    }
 
     printf("Set -ve Pos Lim - Expected:         0x2305220000000000\n");
     int32_t negative_pos_limit = -(int32_t)radians_to_encoder_count(20.0 * 3.1416 / 180.0);
-    CANOPEN.sdo_write(OBJ_Negative_Software_Position_Limit, 0, &negative_pos_limit, sizeof(negative_pos_limit));
+    auto sdo_rx_8 = CANOPEN.sdo_write(OBJ_Negative_Software_Position_Limit, 0, &negative_pos_limit, sizeof(negative_pos_limit));
+    if(sdo_rx_8.reserved_0) {
+        printf("Timeout waiting to set negative software position limit in initMotor\n");
+        return;
+    }
 
     printf("Set +ve Pos Lim - Expected:         0x2306220000000000\n");
     int32_t positive_pos_limit = radians_to_encoder_count(20.0 * 3.1416 / 180.0);
-    CANOPEN.sdo_write(OBJ_Positive_Software_Position_Limit, 0, &positive_pos_limit, sizeof(positive_pos_limit));
+    auto sdo_rx_9 = CANOPEN.sdo_write(OBJ_Positive_Software_Position_Limit, 0, &positive_pos_limit, sizeof(positive_pos_limit));
+    if(sdo_rx_9.reserved_0) {
+        printf("Timeout waiting to set positive software position limit in initMotor\n");
+        return;
+    }
 
     printf("Enable Pos Lims - Expected:         0x2b05230001000000\n");
     uint16_t software_limit_enable = 0b1U;
-    CANOPEN.sdo_write(OBJ_Motor_Control, 0, &software_limit_enable, sizeof(software_limit_enable));
+    auto sdo_rx_10 = CANOPEN.sdo_write(OBJ_Motor_Control, 0, &software_limit_enable, sizeof(software_limit_enable));
+    if(sdo_rx_10.reserved_0) {
+        printf("Timeout waiting to enable software position limits in initMotor\n");
+        return;
+    }
 }
 
 void send_motion_request(const double radians)
@@ -75,12 +115,31 @@ void send_motion_request(const double radians)
     uint8_t bytes_received = 0U;
     int32_t encoder_count  = radians_to_encoder_count(radians);
     encoder_count          = radians < 0 ? -encoder_count : encoder_count;
-    CANOPEN.sdo_write(OBJ_Target_Position, 0, &encoder_count, sizeof(encoder_count));
-    CANOPEN.sdo_read(OBJ_Control_Word, 0, nullptr, 0, &control_word, &bytes_received);
+    auto sdo_rx_1 = CANOPEN.sdo_write(OBJ_Target_Position, 0, &encoder_count, sizeof(encoder_count));
+    if (sdo_rx_1.reserved_0) {
+        printf("Timeout waiting to set target position in send_motion_request\n");
+        return;
+    }
+
+    auto sdo_rx_2 = CANOPEN.sdo_read(OBJ_Control_Word, 0, nullptr, 0, &control_word, &bytes_received);
+    if (sdo_rx_2.reserved_0) {
+        printf("Timeout waiting to read control word in send_motion_request\n");
+        return;
+    }
+
     SET_BIT_PATTERN(control_word, CW_NEW_SETPOINT);
-    CANOPEN.sdo_write(OBJ_Control_Word, 0, &encoder_count, sizeof(encoder_count));
+    auto sdo_rx_3 = CANOPEN.sdo_write(OBJ_Control_Word, 0, &encoder_count, sizeof(encoder_count));
+    if (sdo_rx_3.reserved_0) {
+        printf("Timeout waiting to set new setpoint bit of control word in send_motion_request\n");
+        return;
+    }
+
     CLEAR_BIT_PATTERN(control_word, CW_NEW_SETPOINT);
-    CANOPEN.sdo_write(OBJ_Control_Word, 0, &encoder_count, sizeof(encoder_count));
+    auto sdo_rx_4 = CANOPEN.sdo_write(OBJ_Control_Word, 0, &encoder_count, sizeof(encoder_count));
+    if (sdo_rx_4.reserved_0) {
+        printf("Timeout waiting to clear new setpoint bit of control word in send_motion_request\n");
+        return;
+    }
 }
 
 void setup();

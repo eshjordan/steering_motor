@@ -34,7 +34,18 @@ SDO_t CANopen::sdo_read(CANopenObject_en object, uint8_t subindex, void *req_dat
     // Generate a CAN frame to be populated with received frame.
     can_frame rx_frame = {0};
 
-    m_rx_function(&rx_frame, result_cob_id);
+    if (m_rx_function(&rx_frame, result_cob_id)) {
+        return {
+            .s = 0,
+            .e = 0,
+            .n = 0,
+            .reserved_0 = 1,
+            .ccs = CCS_DOWNLOAD,
+            .index = 0,
+            .subindex = 0,
+            .data = {0},
+        };
+    }
 
     // Extract data from received frame to SDO message.
     SDO_t rx_sdo_msg = {0};
@@ -70,7 +81,18 @@ SDO_t CANopen::sdo_write(CANopenObject_en object, uint8_t subindex, void *data, 
 
     // Generate a CAN frame and listen for response
     can_frame rx_frame = {0};
-    m_rx_function(&rx_frame, result_cob_id);
+    if (m_rx_function(&rx_frame, result_cob_id)) {
+        return {
+            .s = 0,
+            .e = 0,
+            .n = 0,
+            .reserved_0 = 1,
+            .ccs = CCS_DOWNLOAD,
+            .index = 0,
+            .subindex = 0,
+            .data = {0},
+        };
+    }
 
     // Extract data from received frame to SDO message.
     SDO_t rx_sdo_msg = {0};
