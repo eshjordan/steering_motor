@@ -142,17 +142,17 @@ typedef struct __attribute__((__packed__, __aligned__(1))) {
 } SDO_t;
 
 typedef enum : uint8_t {
-    SDO_S_BIT_OFFSET = 7U,
-    SDO_E_BIT_OFFSET = 6U,
-    SDO_N_BIT_OFFSET = 4U,
-    SDO_CCS_BIT_OFFSET = 0U,
+    SDO_S_BIT_OFFSET = 0U,
+    SDO_E_BIT_OFFSET = 1U,
+    SDO_N_BIT_OFFSET = 2U,
+    SDO_CCS_BIT_OFFSET = 5U,
 } SDO_Bit_Offset_t;
 
 typedef enum : uint8_t {
-    SDO_S_BITMASK = 0b10000000,
-    SDO_E_BITMASK = 0b01000000,
-    SDO_N_BITMASK = 0b00110000,
-    SDO_CCS_BITMASK = 0b00000111,
+    SDO_S_BITMASK = 0b00000001,
+    SDO_E_BITMASK = 0b00000010,
+    SDO_N_BITMASK = 0b00001100,
+    SDO_CCS_BITMASK = 0b11100000,
 } SDO_Bitmask_t;
 
 typedef enum : uint8_t {
@@ -165,6 +165,47 @@ typedef enum : uint8_t {
     SDO_DATA_BYTE_OFFSET = 4U,
 } SDO_Byte_Offset_t;
 
+static inline uint8_t get_sdo_data(SDO_t *sdo_msg, void *output)
+{
+    if (!sdo_msg->e) {
+        printf("Non-expedited SDO messages are unsupported!\n");
+        return 0;
+    }
+    if (!sdo_msg->s) {
+        printf("SDO messages with the size specified in the data segment are unsupported!\n");
+        return 0;
+    }
+    uint8_t num_data_bytes = 4 - sdo_msg->n;
+    uint8_t last_data_byte = num_data_bytes - 1;
+    for (int i = 0; i < num_data_bytes; i++) {
+        // ((uint8_t*)output)[last_data_byte - i] = sdo_msg->data[i];
+        ((uint8_t*)output)[i] = sdo_msg->data[i];
+    }
+    return num_data_bytes;
+}
+
+static inline void set_sdo_data(SDO_t *sdo_msg, void *buffer, uint8_t num_bytes)
+{
+    if (!sdo_msg->e) {
+        printf("Non-expedited SDO messages are unsupported!\n");
+        return;
+    }
+    if (!sdo_msg->s) {
+        printf("SDO messages with the size specified in the data segment are unsupported!\n");
+        return;
+    }
+    if (num_bytes > 4) {
+        printf("Num bytes is greater than 4 when setting SDO data!");
+        return;
+    }
+    sdo_msg->n = 4 - num_bytes;
+    uint8_t last_data_byte = num_bytes - 1;
+    for (int i = 0; i < num_bytes; i++) {
+        // sdo_msg->data[last_data_byte - i] = ((uint8_t*)buffer)[i];
+        sdo_msg->data[i] = ((uint8_t*)buffer)[i];
+    }
+}
+
 static inline void sdo_to_can_frame(uint16_t id, SDO_t *sdo_msg, struct can_frame *can_msg)
 {
     can_msg->can_id  = id;
@@ -173,10 +214,11 @@ static inline void sdo_to_can_frame(uint16_t id, SDO_t *sdo_msg, struct can_fram
     SET_BIT_PATTERN(can_msg->data[SDO_E_BYTE_OFFSET], sdo_msg->e << SDO_E_BIT_OFFSET);
     SET_BIT_PATTERN(can_msg->data[SDO_N_BYTE_OFFSET], sdo_msg->n << SDO_N_BIT_OFFSET);
     SET_BIT_PATTERN(can_msg->data[SDO_CCS_BYTE_OFFSET], sdo_msg->ccs << SDO_CCS_BIT_OFFSET);
-    can_msg->data[SDO_INDEX_BYTE_OFFSET] = sdo_msg->index >> 8U;
-    can_msg->data[SDO_INDEX_BYTE_OFFSET+1] = sdo_msg->index & 0xFFU;
+    can_msg->data[SDO_INDEX_BYTE_OFFSET] = sdo_msg->index & 0xFFU;
+    can_msg->data[SDO_INDEX_BYTE_OFFSET+1] = sdo_msg->index >> 8U;
     can_msg->data[SDO_SUBINDEX_BYTE_OFFSET] = sdo_msg->subindex;
-    memcpy(&can_msg->data[SDO_DATA_BYTE_OFFSET], sdo_msg->data, sizeof(sdo_msg->data));
+    memset(&can_msg->data[SDO_DATA_BYTE_OFFSET], 0, sizeof(sdo_msg->data));
+    get_sdo_data(sdo_msg, &can_msg->data[SDO_DATA_BYTE_OFFSET]);
 }
 
 static inline void can_frame_to_sdo(struct can_frame *can_msg, SDO_t *sdo_msg)
@@ -185,9 +227,10 @@ static inline void can_frame_to_sdo(struct can_frame *can_msg, SDO_t *sdo_msg)
     sdo_msg->e = GET_BIT_PATTERN(can_msg->data[SDO_E_BYTE_OFFSET], SDO_E_BITMASK) >> SDO_E_BIT_OFFSET;
     sdo_msg->n = GET_BIT_PATTERN(can_msg->data[SDO_N_BYTE_OFFSET], SDO_N_BITMASK) >> SDO_N_BIT_OFFSET;
     sdo_msg->ccs = (CCS_en)(GET_BIT_PATTERN(can_msg->data[SDO_CCS_BYTE_OFFSET], SDO_CCS_BITMASK) >> SDO_CCS_BIT_OFFSET);
-    sdo_msg->index = (can_msg->data[SDO_INDEX_BYTE_OFFSET] << 8U) | can_msg->data[SDO_INDEX_BYTE_OFFSET+1];
+    sdo_msg->index = can_msg->data[SDO_INDEX_BYTE_OFFSET] | (can_msg->data[SDO_INDEX_BYTE_OFFSET+1] << 8U);
     sdo_msg->subindex = can_msg->data[SDO_SUBINDEX_BYTE_OFFSET];
-    memcpy(sdo_msg->data, &can_msg->data[SDO_DATA_BYTE_OFFSET], sizeof(sdo_msg->data));
+    memset(sdo_msg->data, 0, sizeof(sdo_msg->data));
+    set_sdo_data(sdo_msg, &can_msg->data[SDO_DATA_BYTE_OFFSET], sizeof(sdo_msg->data));
 }
 
 /**

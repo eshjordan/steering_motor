@@ -5,7 +5,12 @@ bool DriveStateController::transition_state(const DriveState_en &from, const Dri
 {
     uint8_t bytes_received = 0U;
     uint16_t control_word  = 0U;
-    m_canopen.sdo_read(OBJ_Control_Word, 0, nullptr, 0, &control_word, &bytes_received);
+    auto rx_sdo_1 = m_canopen.sdo_read(OBJ_Control_Word, 0, nullptr, 0, &control_word, &bytes_received);
+    if (rx_sdo_1.reserved_0) {
+        printf("Timeout waiting to read control word in transition_state\n");
+        return false;
+    }
+
     bool transition_ok = DriveStateMachine::valid_transition(from, to, &control_word);
     if (!transition_ok || control_word >= CW_MAX)
     {
@@ -15,7 +20,11 @@ bool DriveStateController::transition_state(const DriveState_en &from, const Dri
     }
 
     uint16_t status_word = 0U;
-    m_canopen.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    auto rx_sdo_2 = m_canopen.sdo_write(OBJ_Control_Word, 0, &control_word, sizeof(control_word));
+    if (rx_sdo_2.reserved_0) {
+        printf("Timeout waiting to clear control word in transition_state\n");
+        return false;
+    }
 
     if (get_current_state() != DriveState_en::DS_SWITCHED_ON)
     {
